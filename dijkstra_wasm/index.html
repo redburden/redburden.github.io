@@ -9,6 +9,7 @@
     <link rel="stylesheet" type="text/css" href="style.css" />
     <script src="https://cdn.jsdelivr.net/npm/p5@1.9.0/lib/p5.js"></script>
     <script src="almostShortest.js"></script>
+    <script src="getShortest.js"></script>
   </head>
 
   <body>
@@ -17,15 +18,5 @@
       style="overflow: scroll; height: 100%; position: absolute; z-index: 0"
     ></div>
     <script src="graphSketch.js"></script>
-
-    <script>
-      Module.onRuntimeInitialized = async (_) => {
-        const api = {
-          message: Module.cwrap("shortest", "string", []),
-        };
-        console.log(api.message());
-        await setShortestPath(api.message());
-      };
-    </script>
   </body>
 </html>

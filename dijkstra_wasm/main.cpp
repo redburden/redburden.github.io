@@ -332,6 +332,7 @@ GraphPaths dijkstra(Graph graph, int size)
             }
             else if (dist[v] == dist[u] + weight)
             {
+                paths[v].insert(paths[v].end(), paths[u].begin(), paths[u].end());
                 paths[v].push_back(graph.adj[u][i]);
             }
         }
@@ -412,6 +413,13 @@ vector<Graph> parseFromFile(string filename)
             break;
         }
 
+        if (s == "**")
+        {
+            i = 0;
+            line.clear();
+            c = fgetc(file);
+        }
+
         if (i == 1)
         {
             int n, m;
@@ -444,31 +452,30 @@ vector<Graph> parseFromFile(string filename)
     return graphs;
 }
 
-char *shortest()
+char *shortest(int graphNum)
 {
-    string shortestPath = "default";
+    string shortestPath = "";
     vector<Graph> graphs = parseFromFile("graph1.txt");
 
-    shortestPath = to_string(graphs[0].n) + " " + to_string(graphs[1].n) + "\n";
-    for (auto graph : graphs)
-    {
-        ofstream file("shortestPath.txt");
-        GraphPaths gp = dijkstra(graph, graph.n);
-        if (gp.dist[graph.destination] == INF)
-        {
-            file << -1 << endl;
-            shortestPath += "-1\n";
-            char *shortestPathChar = new char[shortestPath.length() + 1];
-            strcpy(shortestPathChar, shortestPath.c_str());
-            return shortestPathChar;
-        }
+    Graph graph = graphs[graphNum];
 
-        for (auto edge : gp.paths[graph.destination])
-        {
-            shortestPath += to_string(edge.from) + " " + to_string(edge.to) + " " + to_string(edge.weight) + "\n";
-            file << edge.from << " " << edge.to << " " << edge.weight << endl;
-        }
+    ofstream file("shortestPath.txt");
+    GraphPaths gp = dijkstra(graph, graph.n);
+    if (gp.dist[graph.destination] == INF)
+    {
+        file << -1 << endl;
+        shortestPath += "-1\n";
+        char *shortestPathChar = new char[shortestPath.length() + 1];
+        strcpy(shortestPathChar, shortestPath.c_str());
+        return shortestPathChar;
     }
+
+    for (auto edge : gp.paths[graph.destination])
+    {
+        shortestPath += to_string(edge.from) + " " + to_string(edge.to) + " " + to_string(edge.weight) + "\n";
+        file << edge.from << " " << edge.to << " " << edge.weight << endl;
+    }
+
     char *shortestPathChar = new char[shortestPath.length() + 1];
     strcpy(shortestPathChar, shortestPath.c_str());
     return shortestPathChar;
@@ -476,33 +483,6 @@ char *shortest()
 
 int main()
 {
-    string shortestPath = "";
-    vector<Graph> graphs = parseFromFile("graph1.txt");
-    for (auto graph : graphs)
-    {
-        if (graph.source == 0 && graph.destination == 0)
-        {
-            break;
-        }
-        ofstream file("shortestPath.txt");
-        GraphPaths gp = dijkstra(graph, graph.n);
-        if (gp.dist[graph.destination] == INF)
-        {
-            file << -1 << endl;
-            shortestPath += "-1\n";
-            char *shortestPathChar = new char[shortestPath.length() + 1];
-            strcpy(shortestPathChar, shortestPath.c_str());
-            return 0;
-        }
-
-        for (auto edge : gp.paths[graph.destination])
-        {
-            shortestPath += to_string(edge.from) + " " + to_string(edge.to) + " " + to_string(edge.weight) + "\n";
-            file << edge.from << " " << edge.to << " " << edge.weight << endl;
-        }
-    }
-    char *shortestPathChar = new char[shortestPath.length() + 1];
-    strcpy(shortestPathChar, shortestPath.c_str());
-    cout << shortestPathChar;
+    shortest(0);
     return 0;
 }

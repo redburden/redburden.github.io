@@ -1,40 +1,37 @@
-let locations, addedNodes, shortestPath;
+let locations, addedNodes, shortestPath, graphs;
 
 function preload() {
-  //lines = loadStrings("graph1.txt");
+  graphs = loadStrings("graph1.txt");
 }
 
 function setup() {
   textAlign(CENTER, BASELINE);
-  fileInput = createFileInput((file) => {
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      lines = e.target.result.split("\n");
-      loadStrings("shortestPath.txt", (shortestPath) => {
-        shadeEdges(locations, shortestPath);
-      });
-      draw();
-    };
-    reader.readAsText(file.file);
+
+  let dropdown = createSelect();
+  dropdown.position(10, 10);
+  dropdown.id("dropdown");
+  getShortest();
+
+  graphs = graphs.join("\n");
+
+  graphs = graphs.split("\n**\n");
+  for (let i = 0; i < graphs.length; i++) {
+    dropdown.option(i);
+  }
+  lines = graphs[1].split("\n");
+  dropdown.changed(() => {
+    lines = graphs[dropdown.value()].split("\n");
+    console.log(lines);
+    getShortest();
   });
-  fileInput.position(0, 0);
-  fileInput.id("fileInput");
-  fileInput.style("background-color", "white");
-  fileInput.style("color", "black");
-  fileInput.style("font-size", "20px");
-  fileInput.style("border-radius", "10px");
-  fileInput.style("border", "none");
-  fileInput.style("padding", "10px");
-  fileInput.style("position", "absolute");
 }
 
-function draw() {
-  //noLoop();
+async function jdraw() {
   createCanvas(1200, 1600);
   textAlign(CENTER, CENTER);
 
-  if (!lines) {
-    return;
+  if (typeof lines == "undefined") {
+    window.setTimeout(jdraw, 100);
   }
 
   let x = 50;
@@ -93,34 +90,42 @@ function draw() {
       addedNodes.set(lines[i][0], nodes);
     }
 
-    circToCircLine(
-      locations.get(lines[i][0])[0],
-      locations.get(lines[i][0])[1],
-      locations.get(lines[i][1])[0],
-      locations.get(lines[i][1])[1],
-      lines[i][2]
-    );
+    if (lines[i][2]) {
+      circToCircLine(
+        locations.get(lines[i][0])[0],
+        locations.get(lines[i][0])[1],
+        locations.get(lines[i][1])[0],
+        locations.get(lines[i][1])[1],
+        lines[i][2]
+      );
+    }
   }
   shadeEdges(shortestPath);
 }
 
 function shadeEdges(lines) {
-  push();
-  strokeWeight(4);
+  if (typeof lines == "undefined") {
+    window.setTimeout(jdraw, 100);
+  }
+
   for (let i = 0; i < lines.length; i++) {
-    lines[i] = lines[i].split(" ");
+    if (typeof lines[i] == "string") {
+      lines[i] = lines[i].split(" ");
+    }
+
     circToCircLine(
       locations.get(lines[i][0])[0],
       locations.get(lines[i][0])[1],
       locations.get(lines[i][1])[0],
       locations.get(lines[i][1])[1],
-      lines[i][2]
+      lines[i][2],
+      4
     );
   }
-  pop();
 }
 
-function circToCircLine(x1, y1, x2, y2, cost) {
+function circToCircLine(x1, y1, x2, y2, cost, weight = 1) {
+  strokeWeight(weight);
   let dx = x2 - x1;
   let dy = y2 - y1;
   let dist = Math.sqrt(dx * dx + dy * dy);
@@ -142,6 +147,7 @@ function circToCircLine(x1, y1, x2, y2, cost) {
 
 async function setShortestPath(lines) {
   lines = lines.split("\n");
+  lines.pop();
+
   shortestPath = lines;
-  console.log(shortestPath);
 }

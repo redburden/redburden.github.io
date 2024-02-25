@@ -1,6 +1,8 @@
 {
   "liveServer.settings.port": 5502,
   "files.associations": {
-    "iosfwd": "cpp"
+    "iosfwd": "cpp",
+    "string": "cpp",
+    "stdexcept": "cpp"
   }
 }
