@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>My HTML Page</title>
+</head>
+<body>
+    <script type="module">
+
+        import {Runtime, Inspector} from "@observablehq/runtime";
+        import define from "4efb6a8fc698659d";
+        
+        const runtime = new Runtime();
+        const main = runtime.module(define, Inspector.into(document.body));
+        
+    </script>
+</body>
+</html>
