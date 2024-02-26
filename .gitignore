@@ -1,3 +1,9 @@
+dijkstra_wasm/shortestPath.txt
+dijkstra_wasm/graphs/
+
+addEM.sh
+
+
 # Logs
 logs
 *.log

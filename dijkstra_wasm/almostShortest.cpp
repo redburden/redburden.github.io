@@ -481,3 +481,45 @@ EXTERN EMSCRIPTEN_KEEPALIVE char *shortest(int graphNum)
     strcpy(shortestPathChar, shortestPath.c_str());
     return shortestPathChar;
 }
+
+EXTERN EMSCRIPTEN_KEEPALIVE char *almostShortest(int graphNum)
+{
+    string shortestPath = "";
+    vector<Graph> graphs = parseFromFile("graph1.txt");
+
+    Graph graph = graphs[graphNum];
+    int origSize = graph.n;
+
+    ofstream file("shortestPath.txt");
+    GraphPaths gp = dijkstra(graph, graph.n);
+    if (gp.dist[graph.destination] == INF)
+    {
+        shortestPath += "-1\n";
+        char *shortestPathChar = new char[shortestPath.length() + 1];
+        strcpy(shortestPathChar, shortestPath.c_str());
+        return shortestPathChar;
+    }
+
+    for (auto edge : gp.paths[graph.destination])
+    {
+        graph.remove_edge(edge.from, edge.to);
+    }
+
+    gp = dijkstra(graph, origSize);
+    if (gp.dist[graph.destination] == INF)
+    {
+        shortestPath += "-1\n";
+        char *shortestPathChar = new char[shortestPath.length() + 1];
+        strcpy(shortestPathChar, shortestPath.c_str());
+        return shortestPathChar;
+    }
+
+    for (auto edge : gp.paths[graph.destination])
+    {
+        shortestPath += to_string(edge.from) + " " + to_string(edge.to) + " " + to_string(edge.weight) + "\n";
+    }
+
+    char *shortestPathChar = new char[shortestPath.length() + 1];
+    strcpy(shortestPathChar, shortestPath.c_str());
+    return shortestPathChar;
+}

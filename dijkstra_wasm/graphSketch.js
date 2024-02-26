@@ -1,4 +1,4 @@
-let locations, addedNodes, shortestPath, graphs;
+let locations, addedNodes, shortestPath, graphs, almostShortest;
 
 function preload() {
   graphs = loadStrings("graph1.txt");
@@ -15,14 +15,15 @@ function setup() {
   graphs = graphs.join("\n");
 
   graphs = graphs.split("\n**\n");
-  for (let i = 0; i < graphs.length; i++) {
+  for (let i = 1; i < graphs.length + 1; i++) {
     dropdown.option(i);
   }
-  lines = graphs[1].split("\n");
+  lines = graphs[0].split("\n");
   dropdown.changed(() => {
-    lines = graphs[dropdown.value()].split("\n");
-    console.log(lines);
+    lines = graphs[dropdown.value() - 1].split("\n");
+
     getShortest();
+    jdraw();
   });
 }
 
@@ -100,31 +101,56 @@ async function jdraw() {
       );
     }
   }
-  shadeEdges(shortestPath);
 }
 
-function shadeEdges(lines) {
-  if (typeof lines == "undefined") {
-    window.setTimeout(jdraw, 100);
-  }
-
-  for (let i = 0; i < lines.length; i++) {
-    if (typeof lines[i] == "string") {
-      lines[i] = lines[i].split(" ");
+function shadeEdgesShortest() {
+  lines = shortestPath;
+  if (typeof lines == "promise" || typeof lines == "undefined") {
+    window.setTimeout(shadeEdges, 100);
+  } else {
+    for (let i = 0; i < lines.length; i++) {
+      if (typeof lines[i] == "string") {
+        lines[i] = lines[i].split(" ");
+      }
+      if (lines[i][0] != -1)
+        circToCircLine(
+          locations.get(lines[i][0])[0],
+          locations.get(lines[i][0])[1],
+          locations.get(lines[i][1])[0],
+          locations.get(lines[i][1])[1],
+          lines[i][2],
+          4,
+          "green"
+        );
     }
-
-    circToCircLine(
-      locations.get(lines[i][0])[0],
-      locations.get(lines[i][0])[1],
-      locations.get(lines[i][1])[0],
-      locations.get(lines[i][1])[1],
-      lines[i][2],
-      4
-    );
   }
 }
 
-function circToCircLine(x1, y1, x2, y2, cost, weight = 1) {
+function shadeEdgesAlmost() {
+  lines = almostShortest;
+  if (typeof lines == "promise" || typeof lines == "undefined") {
+    window.setTimeout(shadeEdges, 100);
+  } else {
+    for (let i = 0; i < lines.length; i++) {
+      if (typeof lines[i] == "string") {
+        lines[i] = lines[i].split(" ");
+      }
+      if (lines[i][0] != -1)
+        circToCircLine(
+          locations.get(lines[i][0])[0],
+          locations.get(lines[i][0])[1],
+          locations.get(lines[i][1])[0],
+          locations.get(lines[i][1])[1],
+          lines[i][2],
+          4,
+          "orange"
+        );
+    }
+  }
+}
+
+function circToCircLine(x1, y1, x2, y2, cost, weight = 1, color = "black") {
+  stroke(color);
   strokeWeight(weight);
   let dx = x2 - x1;
   let dy = y2 - y1;
@@ -142,6 +168,8 @@ function circToCircLine(x1, y1, x2, y2, cost, weight = 1) {
     x2 - ux * 45 + uy * 15,
     y2 - uy * 45 - ux * 15
   );
+  stroke("black");
+  strokeWeight(1);
   text(cost, x2 - ux * 37.5, y2 - uy * 37.5);
 }
 
@@ -150,4 +178,10 @@ async function setShortestPath(lines) {
   lines.pop();
 
   shortestPath = lines;
+}
+async function setAlmost(lines) {
+  lines = lines.split("\n");
+  lines.pop();
+
+  almostShortest = lines;
 }
