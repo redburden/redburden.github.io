@@ -10,6 +10,11 @@ function setup() {
   let dropdown = createSelect();
   dropdown.position(10, 10);
   dropdown.id("dropdown");
+  dropdown.option("Select a graph");
+  if (typeof graphs == "promise") {
+    window.setTimeout(setup, 100);
+  }
+
   getShortest();
 
   graphs = graphs.join("\n");
@@ -105,8 +110,9 @@ async function jdraw() {
 
 function shadeEdgesShortest() {
   lines = shortestPath;
+  console.log(lines);
   if (typeof lines == "promise" || typeof lines == "undefined") {
-    window.setTimeout(shadeEdges, 100);
+    window.setTimeout(shadeEdgesShortest, 100);
   } else {
     for (let i = 0; i < lines.length; i++) {
       if (typeof lines[i] == "string") {
@@ -129,7 +135,7 @@ function shadeEdgesShortest() {
 function shadeEdgesAlmost() {
   lines = almostShortest;
   if (typeof lines == "promise" || typeof lines == "undefined") {
-    window.setTimeout(shadeEdges, 100);
+    window.setTimeout(shadeEdgesAlmost, 100);
   } else {
     for (let i = 0; i < lines.length; i++) {
       if (typeof lines[i] == "string") {
