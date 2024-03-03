@@ -1,45 +1,3 @@
-/*
- * Authored by - Austin Burden
- * Date - 02/17/2024
- * CSC 482 - HW1 Part 1
- *
- * Following requirements listed in 2 ChatGPT-Allowed Parts, I have used Copilot
- * to generate a template for a priority queue using a min heap. I have modified
- * the code to include the unique methods required for the assignment.
- *
- */
-
-#include <algorithm>
-#include <iostream>
-#include <map>
-#include <vector>
-#include <list>
-#include <iterator>
-#include <fstream>
-#include <sstream>
-#include "emscripten.h"
-#include <string.h>
-
-using namespace std;
-#define INF 0x3f3f3f3f
-#define EXTERN extern "C"
-
-class HeapNode
-{
-public:
-    int priority;
-    vector<int> value;
-
-    HeapNode(int priority, int value)
-    {
-        this->priority = priority;
-        this->value = vector<int>(1, value);
-    }
-};
-
-// Class to store the priority of a value in the map
-// The default constructor allows us to distinguish true map values vs ones
-// created by requesting map[non-existent-key]
 class NodeIndex
 {
 public:
@@ -101,8 +59,6 @@ public:
             // Neither child has a lower priority, node at index stays in place
             if (min_index == index)
             {
-                // Need this call to update the index in the map
-                swap_nodes(index, min_index);
                 break;
             }
             // Swap the node at index with the smaller child node
@@ -182,7 +138,7 @@ public:
         return min;
     }
 
-    void deleteNodeItem(vector<int> item)
+    void deleteNode(vector<int> item)
     {
         int index = itemMap[item].heapIndex;
         if (index == -1)
@@ -204,7 +160,6 @@ public:
     void changePriority(vector<int> item, int priority)
     {
         int index = itemMap[item].heapIndex;
-
         if (index == -1)
         {
             itemMap.erase(item);
@@ -212,7 +167,6 @@ public:
         }
         int old_priority = heap[index].priority;
         heap[index].priority = priority;
-
         if (priority < old_priority)
         {
             heapify_up(index);
@@ -228,7 +182,6 @@ class Edge
 {
 public:
     int from, to, weight;
-
     Edge(int from, int to, int weight) : from(from), to(to), weight(weight) {}
 };
 
@@ -252,7 +205,7 @@ public:
 
     Graph(int n) : n(n)
     {
-        adj = vector<vector<Edge>>(n);
+        adj.resize(n);
     }
 
     void add_edge(int from, int to, int weight)
@@ -287,14 +240,17 @@ public:
     }
 };
 
-// This custom object stores the results of the Dijkstra algorithm in a vector of distances and a vector of paths
-// The paths vector is a 2D vector of edges, where each index represents the path to that node
-// The dist vector is a 1D vector of distances to each node
-GraphPaths dijkstra(Graph graph, int size)
+EMSCRIPTEN_KEEPALIVE GraphPaths dijkstra(Graph graph, int size)
 {
     PriorityQueue pq(size);
     vector<int> dist(size, INF);
-    vector<vector<Edge>> paths = vector<vector<Edge>>(size, vector<Edge>(1, Edge(graph.source, graph.source, 0)));
+    vector<vector<Edge>> paths = vector<vector<Edge>>(size, vector<Edge>(0, Edge(graph.source, graph.source, 0)));
+
+    /*
+      Use this vector to store the previous nodes visited to make up the
+      current distance we are entering. Give dist another field that acts as "history"
+      that stores the edges that go together to make this path.
+      */
 
     HeapNode start(0, graph.source);
     start.value.push_back(graph.source);
@@ -327,6 +283,7 @@ GraphPaths dijkstra(Graph graph, int size)
                 // Updating distance of v
                 dist[v] = dist[u] + weight;
 
+                // Add paths[u] to paths[v]
                 paths[v] = paths[u];
                 paths[v].push_back(graph.adj[u][i]);
 
@@ -334,7 +291,6 @@ GraphPaths dijkstra(Graph graph, int size)
             }
             else if (dist[v] == dist[u] + weight)
             {
-                // Add paths[u] to paths[v]
                 paths[v].insert(paths[v].end(), paths[u].begin(), paths[u].end());
                 paths[v].push_back(graph.adj[u][i]);
             }
@@ -345,183 +301,4 @@ GraphPaths dijkstra(Graph graph, int size)
     gp.dist = dist;
     gp.paths = paths;
     return gp;
-}
-
-vector<Graph> parseInput()
-{
-    vector<Graph> graphs;
-
-    // While there are more lines to read, input line into string
-    char line[8];
-    cin.getline(line, 8);
-
-    while (line[0] != '0' && line[2] != '0')
-    {
-        int n = line[0] - '0';
-        int m = line[2] - '0';
-
-        Graph g(n);
-
-        cin.getline(line, 8);
-
-        int start = line[0] - '0';
-        int end = line[2] - '0';
-
-        g.source = start;
-        g.destination = end;
-
-        for (int i = 0; i < m; i++)
-        {
-            cin.getline(line, 8);
-            int from = line[0] - '0';
-            int to = line[2] - '0';
-            int weight = line[4] - '0';
-            g.add_edge(from, to, weight);
-        }
-
-        cin.getline(line, 5);
-        graphs.push_back(g);
-    }
-    return graphs;
-}
-
-EMSCRIPTEN_KEEPALIVE vector<Graph> parseFromFile(string filename)
-{
-    vector<Graph> graphs;
-    cout << "Parsing file: " << filename << endl;
-
-    FILE *file = fopen("graph1.txt", "rb");
-    if (!file)
-    {
-        printf("cannot open file\n");
-        return graphs;
-    }
-    vector<char> line;
-    int i = 0;
-    char c = fgetc(file);
-    while (!feof(file))
-    {
-        while (c != '\n' && c != EOF)
-        {
-            line.push_back(c);
-            c = fgetc(file);
-        }
-        i++;
-        // Convert the vector to a string
-        string s(line.begin(), line.end());
-        stringstream ss(s);
-
-        if (s == "0 0")
-        {
-            break;
-        }
-
-        if (s == "**")
-        {
-            i = 0;
-            line.clear();
-            c = fgetc(file);
-        }
-
-        if (i == 1)
-        {
-            int n, m;
-            ss >> n >> m;
-            Graph g(n);
-            graphs.push_back(g);
-            line.clear();
-            c = fgetc(file);
-        }
-        else if (i == 2)
-        {
-            int start, end;
-            ss >> start >> end;
-            graphs[graphs.size() - 1].source = start;
-            graphs[graphs.size() - 1].destination = end;
-            line.clear();
-            c = fgetc(file);
-        }
-        else if (i > 2)
-        {
-            int from, to, weight;
-            ss >> from >> to >> weight;
-            graphs[graphs.size() - 1].add_edge(from, to, weight);
-            line.clear();
-            c = fgetc(file);
-        }
-    }
-    fclose(file);
-
-    return graphs;
-}
-
-EXTERN EMSCRIPTEN_KEEPALIVE char *shortest(int graphNum)
-{
-    string shortestPath = "";
-    vector<Graph> graphs = parseFromFile("graph1.txt");
-
-    Graph graph = graphs[graphNum];
-
-    ofstream file("shortestPath.txt");
-    GraphPaths gp = dijkstra(graph, graph.n);
-    if (gp.dist[graph.destination] == INF)
-    {
-        file << -1 << endl;
-        shortestPath += "-1\n";
-        char *shortestPathChar = new char[shortestPath.length() + 1];
-        strcpy(shortestPathChar, shortestPath.c_str());
-        return shortestPathChar;
-    }
-
-    for (auto edge : gp.paths[graph.destination])
-    {
-        shortestPath += to_string(edge.from) + " " + to_string(edge.to) + " " + to_string(edge.weight) + "\n";
-        file << edge.from << " " << edge.to << " " << edge.weight << endl;
-    }
-
-    char *shortestPathChar = new char[shortestPath.length() + 1];
-    strcpy(shortestPathChar, shortestPath.c_str());
-    return shortestPathChar;
-}
-
-EXTERN EMSCRIPTEN_KEEPALIVE char *almostShortest(int graphNum)
-{
-    string shortestPath = "";
-    vector<Graph> graphs = parseFromFile("graph1.txt");
-
-    Graph graph = graphs[graphNum];
-    int origSize = graph.n;
-
-    ofstream file("shortestPath.txt");
-    GraphPaths gp = dijkstra(graph, graph.n);
-    if (gp.dist[graph.destination] == INF)
-    {
-        shortestPath += "-1\n";
-        char *shortestPathChar = new char[shortestPath.length() + 1];
-        strcpy(shortestPathChar, shortestPath.c_str());
-        return shortestPathChar;
-    }
-
-    for (auto edge : gp.paths[graph.destination])
-    {
-        graph.remove_edge(edge.from, edge.to);
-    }
-
-    gp = dijkstra(graph, origSize);
-    if (gp.dist[graph.destination] == INF)
-    {
-        shortestPath += "-1\n";
-        char *shortestPathChar = new char[shortestPath.length() + 1];
-        strcpy(shortestPathChar, shortestPath.c_str());
-        return shortestPathChar;
-    }
-
-    for (auto edge : gp.paths[graph.destination])
-    {
-        shortestPath += to_string(edge.from) + " " + to_string(edge.to) + " " + to_string(edge.weight) + "\n";
-    }
-
-    char *shortestPathChar = new char[shortestPath.length() + 1];
-    strcpy(shortestPathChar, shortestPath.c_str());
-    return shortestPathChar;
 }

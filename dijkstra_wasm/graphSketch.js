@@ -6,9 +6,13 @@ function preload() {
 
 function setup() {
   textAlign(CENTER, BASELINE);
+  addTopBlurb();
 
   let dropdown = createSelect();
-  dropdown.position(10, 10);
+  dropdown.class(
+    "w-10/12 bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block  p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+  );
+  dropdown.position(100, 175);
   dropdown.id("dropdown");
   dropdown.option("Select a graph");
   if (typeof graphs == "promise") {
@@ -23,17 +27,17 @@ function setup() {
   for (let i = 1; i < graphs.length + 1; i++) {
     dropdown.option(i);
   }
+
   lines = graphs[0].split("\n");
   dropdown.changed(() => {
     lines = graphs[dropdown.value() - 1].split("\n");
-
     getShortest();
-    jdraw();
+    drawGraph();
   });
 }
 
-async function jdraw() {
-  createCanvas(1200, 1600);
+async function drawGraph() {
+  let canvas = createCanvas(window.innerWidth, window.innerHeight + 500);
   textAlign(CENTER, CENTER);
 
   if (typeof lines == "undefined") {
@@ -42,7 +46,8 @@ async function jdraw() {
 
   let x = 50;
   let farthestX = 50;
-  let y = 500;
+  let y = 750;
+  let farthestY = 750;
   addedNodes = new Map();
   locations = new Map();
 
@@ -77,6 +82,13 @@ async function jdraw() {
         fromChildren[fromChildren.length - 1].y + 200
       );
 
+      if (fromChildren[fromChildren.length - 1].x > farthestX) {
+        farthestX = fromChildren[fromChildren.length - 1].x;
+      }
+      if (fromChildren[fromChildren.length - 1].y + 200 > farthestY) {
+        farthestY = fromChildren[fromChildren.length - 1].y + 200;
+      }
+
       locations.set(lines[i][1], [
         fromChildren[fromChildren.length - 1].x,
         fromChildren[fromChildren.length - 1].y + 200,
@@ -106,11 +118,39 @@ async function jdraw() {
       );
     }
   }
+
+  if (!addedNodes.has(lines[1][2])) {
+    circle(farthestX + 200, y, 50);
+    text(lines[1][2], farthestX + 200, y);
+    farthestX += 200;
+    addedNodes.set(lines[1][2], [{ x: farthestX + 200, y: y - 400 }]);
+    locations.set(lines[1][2], [farthestX, y]);
+  }
+
+  push();
+  textAlign(CENTER, CENTER);
+  textSize(20);
+  strokeWeight(1);
+  text("Path Start: " + lines[1][0], 100, 250);
+  text("Path End: " + lines[1][2], 100, 300);
+  text("Input Used: ", farthestX + 350, 300);
+
+  for (let i = 0; i < lines.length; i++) {
+    if (typeof lines[i][2] != "undefined")
+      text(
+        lines[i][0] + " " + lines[i][1] + " " + lines[i][2],
+        farthestX + 400,
+        325 + i * 40
+      );
+  }
+  pop();
+
+  // TO-DO: Resize canvas dyamically to fit graph
 }
 
 function shadeEdgesShortest() {
   lines = shortestPath;
-  console.log(lines);
+
   if (typeof lines == "promise" || typeof lines == "undefined") {
     window.setTimeout(shadeEdgesShortest, 100);
   } else {
@@ -134,6 +174,7 @@ function shadeEdgesShortest() {
 
 function shadeEdgesAlmost() {
   lines = almostShortest;
+
   if (typeof lines == "promise" || typeof lines == "undefined") {
     window.setTimeout(shadeEdgesAlmost, 100);
   } else {
@@ -156,6 +197,7 @@ function shadeEdgesAlmost() {
 }
 
 function circToCircLine(x1, y1, x2, y2, cost, weight = 1, color = "black") {
+  push();
   stroke(color);
   strokeWeight(weight);
   let dx = x2 - x1;
@@ -165,7 +207,7 @@ function circToCircLine(x1, y1, x2, y2, cost, weight = 1, color = "black") {
   let ux = dx / dist;
   let uy = dy / dist;
 
-  line(x1 + ux * 25, y1 + uy * 25, x2 - ux * 25, y2 - uy * 25);
+  line(x1 + ux * 50, y1 + uy * 50, x2 - ux * 25, y2 - uy * 25);
   triangle(
     x2 - ux * 25,
     y2 - uy * 25,
@@ -174,8 +216,8 @@ function circToCircLine(x1, y1, x2, y2, cost, weight = 1, color = "black") {
     x2 - ux * 45 + uy * 15,
     y2 - uy * 45 - ux * 15
   );
-  stroke("black");
-  strokeWeight(1);
+  pop();
+
   text(cost, x2 - ux * 37.5, y2 - uy * 37.5);
 }
 

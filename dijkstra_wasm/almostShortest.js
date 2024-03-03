@@ -29,7 +29,6 @@ var createMyModule = (() => {
     });
     [
       "_memory",
-      "__Z8dijkstra5Graphi",
       "__Z13parseFromFileNSt3__212basic_stringIcNS_11char_traitsIcEENS_9allocatorIcEEEE",
       "_shortest",
       "_almostShortest",
@@ -5375,8 +5374,6 @@ var createMyModule = (() => {
     };
     var wasmExports = createWasm();
     var ___wasm_call_ctors = createExportWrapper("__wasm_call_ctors");
-    var __Z8dijkstra5Graphi = (Module["__Z8dijkstra5Graphi"] =
-      createExportWrapper("_Z8dijkstra5Graphi"));
     var __Z13parseFromFileNSt3__212basic_stringIcNS_11char_traitsIcEENS_9allocatorIcEEEE =
       (Module[
         "__Z13parseFromFileNSt3__212basic_stringIcNS_11char_traitsIcEENS_9allocatorIcEEEE"
