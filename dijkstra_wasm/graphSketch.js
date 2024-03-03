@@ -1,4 +1,4 @@
-let locations, addedNodes, shortestPath, graphs, almostShortest;
+let locations, addedNodes, shortestPath, graphs, almostShortest, blurbY;
 
 function preload() {
   graphs = loadStrings("graph1.txt");
@@ -6,13 +6,13 @@ function preload() {
 
 function setup() {
   textAlign(CENTER, BASELINE);
-  addTopBlurb();
+  blurbY = addTopBlurb();
 
   let dropdown = createSelect();
   dropdown.class(
     "w-10/12 bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block  p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
   );
-  dropdown.position(100, 175);
+  dropdown.position(100, blurbY + 150);
   dropdown.id("dropdown");
   dropdown.option("Select a graph");
   if (typeof graphs == "promise") {
@@ -131,16 +131,16 @@ async function drawGraph() {
   textAlign(CENTER, CENTER);
   textSize(20);
   strokeWeight(1);
-  text("Path Start: " + lines[1][0], 100, 250);
-  text("Path End: " + lines[1][2], 100, 300);
-  text("Input Used: ", farthestX + 350, 300);
+  text("Path Start: " + lines[1][0], 100, 250 + blurbY);
+  text("Path End: " + lines[1][2], 100, 300 + blurbY);
+  text("Input Used: ", farthestX + 350, 300 + blurbY);
 
   for (let i = 0; i < lines.length; i++) {
     if (typeof lines[i][2] != "undefined")
       text(
         lines[i][0] + " " + lines[i][1] + " " + lines[i][2],
         farthestX + 400,
-        325 + i * 40
+        325 + blurbY + i * 40
       );
   }
   pop();
