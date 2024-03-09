@@ -1,0 +1,599 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1"><!-- Begin Jekyll SEO tag v2.8.0 -->
+<title>C++ Source Code Used by the Almost Shortest Path Solution | redburden.github.io</title>
+<meta name="generator" content="Jekyll v3.9.5" />
+<meta property="og:title" content="C++ Source Code Used by the Almost Shortest Path Solution" />
+<meta property="og:locale" content="en_US" />
+<meta name="description" content="Blog owned by Austin Burden to show my work and thoughts." />
+<meta property="og:description" content="Blog owned by Austin Burden to show my work and thoughts." />
+<link rel="canonical" href="http://localhost:4000/dijkstra_wasm/source.html" />
+<meta property="og:url" content="http://localhost:4000/dijkstra_wasm/source.html" />
+<meta property="og:site_name" content="redburden.github.io" />
+<meta property="og:type" content="article" />
+<meta property="article:published_time" content="2024-03-09T15:21:00-06:00" />
+<meta name="twitter:card" content="summary" />
+<meta property="twitter:title" content="C++ Source Code Used by the Almost Shortest Path Solution" />
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"BlogPosting","dateModified":"2024-03-09T15:21:00-06:00","datePublished":"2024-03-09T15:21:00-06:00","description":"Blog owned by Austin Burden to show my work and thoughts.","headline":"C++ Source Code Used by the Almost Shortest Path Solution","mainEntityOfPage":{"@type":"WebPage","@id":"http://localhost:4000/dijkstra_wasm/source.html"},"url":"http://localhost:4000/dijkstra_wasm/source.html"}</script>
+<!-- End Jekyll SEO tag -->
+<link rel="stylesheet" href="/assets/main.css"><link type="application/atom+xml" rel="alternate" href="http://localhost:4000/feed.xml" title="redburden.github.io" /></head>
+<body><header class="site-header" role="banner">
+
+  <div class="wrapper"><a class="site-title" rel="author" href="/">redburden.github.io</a><nav class="site-nav">
+        <input type="checkbox" id="nav-trigger" class="nav-trigger" />
+        <label for="nav-trigger">
+          <span class="menu-icon">
+            <svg viewBox="0 0 18 15" width="18px" height="15px">
+              <path d="M18,1.484c0,0.82-0.665,1.484-1.484,1.484H1.484C0.665,2.969,0,2.304,0,1.484l0,0C0,0.665,0.665,0,1.484,0 h15.032C17.335,0,18,0.665,18,1.484L18,1.484z M18,7.516C18,8.335,17.335,9,16.516,9H1.484C0.665,9,0,8.335,0,7.516l0,0 c0-0.82,0.665-1.484,1.484-1.484h15.032C17.335,6.031,18,6.696,18,7.516L18,7.516z M18,13.516C18,14.335,17.335,15,16.516,15H1.484 C0.665,15,0,14.335,0,13.516l0,0c0-0.82,0.665-1.483,1.484-1.483h15.032C17.335,12.031,18,12.695,18,13.516L18,13.516z"/>
+            </svg>
+          </span>
+        </label>
+
+        <div class="trigger"><a class="page-link" href="/dijkstra_wasm/source.html">C++ Source Code Used by the Almost Shortest Path Solution</a></div>
+      </nav></div>
+</header>
+<main class="page-content" aria-label="Content">
+      <div class="wrapper">
+        <article class="post h-entry" itemscope itemtype="http://schema.org/BlogPosting">
+
+  <header class="post-header">
+    <h1 class="post-title p-name" itemprop="name headline">C++ Source Code Used by the Almost Shortest Path Solution</h1>
+    <p class="post-meta">
+      <time class="dt-published" datetime="2024-03-09T15:21:00-06:00" itemprop="datePublished">Mar 9, 2024
+      </time></p>
+  </header>
+
+  <div class="post-content e-content" itemprop="articleBody">
+    <div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>#include &lt;algorithm&gt;
+#include &lt;iostream&gt;
+#include &lt;map&gt;
+#include &lt;vector&gt;
+#include &lt;list&gt;
+#include &lt;iterator&gt;
+#include &lt;fstream&gt;
+#include &lt;sstream&gt;
+#include "emscripten.h"
+#include &lt;string.h&gt;
+
+using namespace std;
+#define INF 0x3f3f3f3f
+#define EXTERN extern "C"
+
+class HeapNode
+{
+public:
+    int priority;
+    vector&lt;int&gt; value;
+
+    HeapNode(int priority, int value)
+    {
+        this-&gt;priority = priority;
+        this-&gt;value = vector&lt;int&gt;(1, value);
+    }
+};
+
+// Class to store the priority of a value in the map
+// The default constructor allows us to distinguish true map values vs ones
+// created by requesting map[non-existent-key]
+class NodeIndex
+{
+public:
+    int heapIndex;
+
+    NodeIndex() { this-&gt;heapIndex = -1; }
+    explicit NodeIndex(int heapIndex) { this-&gt;heapIndex = heapIndex; }
+};
+
+class PriorityQueue
+
+{
+public:
+    vector&lt;HeapNode&gt; heap;
+    int size;
+    int capacity;
+    map&lt;vector&lt;int&gt;, NodeIndex&gt; itemMap;
+
+    PriorityQueue(int n)
+    {
+        size = 0;
+        capacity = n;
+    }
+
+    void swap_nodes(int index1, int index2)
+    {
+        swap(heap[index1], heap[index2]);
+        itemMap[heap[index1].value] = NodeIndex(index1);
+        itemMap[heap[index2].value] = NodeIndex(index2);
+    }
+
+    void heapify_up(int index)
+    {
+        while (index &gt; 0 &amp;&amp; heap[index].priority &lt; heap[index / 2].priority)
+        {
+            itemMap[heap[index].value] = NodeIndex(index / 2);
+            swap_nodes(index, index / 2);
+            index /= 2;
+        }
+    }
+
+    void heapify_down(int index)
+    {
+        while (index * 2 &lt; size)
+        {
+            int min_index = index;
+
+            // Check if left child has a lower priority
+            if (heap[index * 2].priority &lt; heap[min_index].priority)
+            {
+                min_index = index * 2;
+            }
+            // Check if right child has a lower priority
+            if (index * 2 + 1 &lt; size &amp;&amp; index * 2 + 1 &lt; size &amp;&amp;
+                heap[index * 2 + 1].priority &lt; heap[min_index].priority)
+            {
+                min_index = index * 2 + 1;
+            }
+            // Neither child has a lower priority, node at index stays in place
+            if (min_index == index)
+            {
+                // Need this call to update the index in the map
+                swap_nodes(index, min_index);
+                break;
+            }
+            // Swap the node at index with the smaller child node
+            swap_nodes(index, min_index);
+            // Keep searching for the correct position
+            index = min_index;
+        }
+    }
+
+    // Insert a new node into the heap at last position
+    // Move it up if needed
+    void insert(int priority, int value)
+    {
+        // Check if heap is full
+        if (size == capacity)
+        {
+            cout &lt;&lt; "Heap is full" &lt;&lt; endl;
+            return;
+        }
+        heap.emplace_back(priority, value);
+        itemMap[heap[size].value] = NodeIndex(size);
+        size++;
+        heapify_up(size - 1);
+    }
+
+    void insert(HeapNode newNode)
+    {
+        // Check if heap is full
+        if (size == capacity)
+        {
+            cout &lt;&lt; "Heap is full" &lt;&lt; endl;
+            return;
+        }
+        heap.emplace_back(newNode);
+        itemMap[heap[size].value] = NodeIndex(size);
+        size++;
+        heapify_up(size - 1);
+    }
+
+    HeapNode findMin()
+    {
+        if (size == 0)
+        {
+            cout &lt;&lt; "Heap is empty" &lt;&lt; endl;
+            return {-1, ' '};
+        }
+        return heap[0];
+    }
+
+    void deleteNode(int index)
+    {
+        if (index &lt; 0 || index &gt;= size)
+        {
+            cout &lt;&lt; "Index out of bounds" &lt;&lt; endl;
+            return;
+        }
+        // Remove the item from the map
+        itemMap.erase(heap[index].value);
+
+        // Swap the node with the last node and remove it
+        swap(heap[index], heap[size - 1]);
+        heap.pop_back();
+        size--;
+        // Move the swapped node to the correct position
+        heapify_down(index);
+    }
+
+    HeapNode extract_min()
+    {
+        if (size == 0)
+        {
+            cout &lt;&lt; "Heap is empty" &lt;&lt; endl;
+            return {-1, ' '};
+        }
+        HeapNode min = heap[0];
+        deleteNode(0);
+        return min;
+    }
+
+    void deleteNodeItem(vector&lt;int&gt; item)
+    {
+        int index = itemMap[item].heapIndex;
+        if (index == -1)
+        {
+            itemMap.erase(item);
+        }
+
+        // Delete the node after finding the index
+        if (index &gt; -1 &amp;&amp; index &lt; size)
+        {
+            deleteNode(index);
+        }
+        else
+        {
+            return;
+        }
+    }
+
+    void changePriority(vector&lt;int&gt; item, int priority)
+    {
+        int index = itemMap[item].heapIndex;
+
+        if (index == -1)
+        {
+            itemMap.erase(item);
+            return;
+        }
+        int old_priority = heap[index].priority;
+        heap[index].priority = priority;
+
+        if (priority &lt; old_priority)
+        {
+            heapify_up(index);
+        }
+        else
+        {
+            heapify_down(index);
+        }
+    }
+};
+
+class Edge
+{
+public:
+    int from, to, weight;
+
+    Edge(int from, int to, int weight) : from(from), to(to), weight(weight) {}
+};
+
+class GraphPaths
+{
+public:
+    vector&lt;int&gt; dist;
+    vector&lt;vector&lt;Edge&gt;&gt; paths;
+    GraphPaths(int n, int source) : dist(n, INF), paths(n, vector&lt;Edge&gt;(1, Edge(source, source, 0)))
+    {
+    }
+};
+
+class Graph
+{
+public:
+    vector&lt;vector&lt;Edge&gt;&gt; adj;
+    int n;
+    int source;
+    int destination;
+
+    Graph(int n) : n(n)
+    {
+        adj = vector&lt;vector&lt;Edge&gt;&gt;(n);
+    }
+
+    void add_edge(int from, int to, int weight)
+    {
+        adj[from].push_back(Edge(from, to, weight));
+    }
+
+    void remove_edge(int from, int to)
+    {
+        for (int i = 0; i &lt; adj[from].size(); i++)
+        {
+            if (adj[from][i].to == to)
+            {
+                adj[from].erase(adj[from].begin() + i);
+                n--;
+                break;
+            }
+        }
+    }
+
+    void print_graph()
+    {
+        for (int i = 0; i &lt; n; i++)
+        {
+            cout &lt;&lt; "Node " &lt;&lt; i &lt;&lt; " makes an edge with:\n";
+            for (auto edge : adj[i])
+            {
+                cout &lt;&lt; "\tNode " &lt;&lt; edge.to &lt;&lt; " with weight " &lt;&lt; edge.weight &lt;&lt; "\n";
+            }
+            cout &lt;&lt; "-----------------------------------\n";
+        }
+    }
+};
+
+// This custom object stores the results of the Dijkstra algorithm in a vector of distances and a vector of paths
+// The paths vector is a 2D vector of edges, where each index represents the path to that node
+// The dist vector is a 1D vector of distances to each node
+GraphPaths dijkstra(Graph graph, int size)
+{
+    PriorityQueue pq(size);
+    vector&lt;int&gt; dist(size, INF);
+    vector&lt;vector&lt;Edge&gt;&gt; paths = vector&lt;vector&lt;Edge&gt;&gt;(size, vector&lt;Edge&gt;(1, Edge(graph.source, graph.source, 0)));
+
+    HeapNode start(0, graph.source);
+    start.value.push_back(graph.source);
+    pq.insert(start);
+    for (int i = 0; i &lt; size; i++)
+    {
+        if (i != graph.source)
+            pq.insert(INF, i);
+    }
+
+    dist[graph.source] = 0;
+
+    while (!pq.heap.empty())
+    {
+        // The first vertex in pair is the minimum distance
+        // vertex, extract it from priority queue.
+
+        int u = pq.extract_min().value[0];
+
+        for (int i = 0; i &lt; graph.adj[u].size(); i++)
+        {
+            // Get vertex label and weight of current
+            // adjacent of u.
+            int v = graph.adj[u][i].to;
+            int weight = graph.adj[u][i].weight;
+
+            // If there is shorted path to v through u.
+            if (dist[v] &gt; dist[u] + weight)
+            {
+                // Updating distance of v
+                dist[v] = dist[u] + weight;
+
+                paths[v] = paths[u];
+                paths[v].push_back(graph.adj[u][i]);
+
+                pq.changePriority(vector&lt;int&gt;(1, v), dist[v]);
+            }
+            else if (dist[v] == dist[u] + weight)
+            {
+                // Add paths[u] to paths[v]
+                paths[v].insert(paths[v].end(), paths[u].begin(), paths[u].end());
+                paths[v].push_back(graph.adj[u][i]);
+            }
+        }
+    }
+
+    GraphPaths gp(graph.n, graph.source);
+    gp.dist = dist;
+    gp.paths = paths;
+    return gp;
+}
+
+vector&lt;Graph&gt; parseInput()
+{
+    vector&lt;Graph&gt; graphs;
+
+    // While there are more lines to read, input line into string
+    char line[8];
+    cin.getline(line, 8);
+
+    while (line[0] != '0' &amp;&amp; line[2] != '0')
+    {
+        int n = line[0] - '0';
+        int m = line[2] - '0';
+
+        Graph g(n);
+
+        cin.getline(line, 8);
+
+        int start = line[0] - '0';
+        int end = line[2] - '0';
+
+        g.source = start;
+        g.destination = end;
+
+        for (int i = 0; i &lt; m; i++)
+        {
+            cin.getline(line, 8);
+            int from = line[0] - '0';
+            int to = line[2] - '0';
+            int weight = line[4] - '0';
+            g.add_edge(from, to, weight);
+        }
+
+        cin.getline(line, 5);
+        graphs.push_back(g);
+    }
+    return graphs;
+}
+
+EMSCRIPTEN_KEEPALIVE vector&lt;Graph&gt; parseFromFile(string filename)
+{
+    vector&lt;Graph&gt; graphs;
+    cout &lt;&lt; "Parsing file: " &lt;&lt; filename &lt;&lt; endl;
+
+    FILE *file = fopen("graph1.txt", "rb");
+    if (!file)
+    {
+        printf("cannot open file\n");
+        return graphs;
+    }
+    vector&lt;char&gt; line;
+    int i = 0;
+    char c = fgetc(file);
+    while (!feof(file))
+    {
+        while (c != '\n' &amp;&amp; c != EOF)
+        {
+            line.push_back(c);
+            c = fgetc(file);
+        }
+        i++;
+        // Convert the vector to a string
+        string s(line.begin(), line.end());
+        stringstream ss(s);
+
+        if (s == "0 0")
+        {
+            break;
+        }
+
+        if (s == "**")
+        {
+            i = 0;
+            line.clear();
+            c = fgetc(file);
+        }
+
+        if (i == 1)
+        {
+            int n, m;
+            ss &gt;&gt; n &gt;&gt; m;
+            Graph g(n);
+            graphs.push_back(g);
+            line.clear();
+            c = fgetc(file);
+        }
+        else if (i == 2)
+        {
+            int start, end;
+            ss &gt;&gt; start &gt;&gt; end;
+            graphs[graphs.size() - 1].source = start;
+            graphs[graphs.size() - 1].destination = end;
+            line.clear();
+            c = fgetc(file);
+        }
+        else if (i &gt; 2)
+        {
+            int from, to, weight;
+            ss &gt;&gt; from &gt;&gt; to &gt;&gt; weight;
+            graphs[graphs.size() - 1].add_edge(from, to, weight);
+            line.clear();
+            c = fgetc(file);
+        }
+    }
+    fclose(file);
+
+    return graphs;
+}
+
+EXTERN EMSCRIPTEN_KEEPALIVE char *shortest(int graphNum)
+{
+    string shortestPath = "";
+    vector&lt;Graph&gt; graphs = parseFromFile("graph1.txt");
+
+    Graph graph = graphs[graphNum];
+
+    ofstream file("shortestPath.txt");
+    GraphPaths gp = dijkstra(graph, graph.n);
+    if (gp.dist[graph.destination] == INF)
+    {
+        file &lt;&lt; -1 &lt;&lt; endl;
+        shortestPath += "-1\n";
+        char *shortestPathChar = new char[shortestPath.length() + 1];
+        strcpy(shortestPathChar, shortestPath.c_str());
+        return shortestPathChar;
+    }
+
+    for (auto edge : gp.paths[graph.destination])
+    {
+        shortestPath += to_string(edge.from) + " " + to_string(edge.to) + " " + to_string(edge.weight) + "\n";
+        file &lt;&lt; edge.from &lt;&lt; " " &lt;&lt; edge.to &lt;&lt; " " &lt;&lt; edge.weight &lt;&lt; endl;
+    }
+
+    char *shortestPathChar = new char[shortestPath.length() + 1];
+    strcpy(shortestPathChar, shortestPath.c_str());
+    return shortestPathChar;
+}
+
+EXTERN EMSCRIPTEN_KEEPALIVE char *almostShortest(int graphNum)
+{
+    string shortestPath = "";
+    vector&lt;Graph&gt; graphs = parseFromFile("graph1.txt");
+
+    Graph graph = graphs[graphNum];
+    int origSize = graph.n;
+
+    ofstream file("shortestPath.txt");
+    GraphPaths gp = dijkstra(graph, graph.n);
+    if (gp.dist[graph.destination] == INF)
+    {
+        shortestPath += "-1\n";
+        char *shortestPathChar = new char[shortestPath.length() + 1];
+        strcpy(shortestPathChar, shortestPath.c_str());
+        return shortestPathChar;
+    }
+
+    for (auto edge : gp.paths[graph.destination])
+    {
+        graph.remove_edge(edge.from, edge.to);
+    }
+
+    gp = dijkstra(graph, origSize);
+    if (gp.dist[graph.destination] == INF)
+    {
+        shortestPath += "-1\n";
+        char *shortestPathChar = new char[shortestPath.length() + 1];
+        strcpy(shortestPathChar, shortestPath.c_str());
+        return shortestPathChar;
+    }
+
+    for (auto edge : gp.paths[graph.destination])
+    {
+        shortestPath += to_string(edge.from) + " " + to_string(edge.to) + " " + to_string(edge.weight) + "\n";
+    }
+
+    char *shortestPathChar = new char[shortestPath.length() + 1];
+    strcpy(shortestPathChar, shortestPath.c_str());
+    return shortestPathChar;
+}
+
+</code></pre></div></div>
+
+  </div><a class="u-url" href="/dijkstra_wasm/source.html" hidden></a>
+</article>
+
+      </div>
+    </main><footer class="site-footer h-card">
+  <data class="u-url" href="/"></data>
+
+  <div class="wrapper">
+
+    <h2 class="footer-heading">redburden.github.io</h2>
+
+    <div class="footer-col-wrapper">
+      <div class="footer-col footer-col-1">
+        <ul class="contact-list">
+          <li class="p-name">redburden.github.io</li><li><a class="u-email" href="mailto:your-email@example.com">your-email@example.com</a></li></ul>
+      </div>
+
+      <div class="footer-col footer-col-2"><ul class="social-media-list"><li><a href="https://github.com/redburden"><svg class="svg-icon"><use xlink:href="/assets/minima-social-icons.svg#github"></use></svg> <span class="username">redburden</span></a></li></ul>
+</div>
+
+      <div class="footer-col footer-col-3">
+        <p>Blog owned by Austin Burden to show my work and thoughts.</p>
+      </div>
+    </div>
+
+  </div>
+
+</footer>
+</body>
+
+</html>

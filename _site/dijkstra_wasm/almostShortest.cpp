@@ -1,11 +1,14 @@
----
-layout: post
-title: "C++ Source Code for Almost Shortest Path"
-date: 2024-03-09 14:37:52 -0600
-categories: jekyll update
----
+/*
+ * Authored by - Austin Burden
+ * Date - 02/17/2024
+ * CSC 482 - HW1 Part 1
+ *
+ * Following requirements listed in 2 ChatGPT-Allowed Parts, I have used Copilot
+ * to generate a template for a priority queue using a min heap. I have modified
+ * the code to include the unique methods required for the assignment.
+ *
+ */
 
-```
 #include <algorithm>
 #include <iostream>
 #include <map>
@@ -522,5 +525,3 @@ EXTERN EMSCRIPTEN_KEEPALIVE char *almostShortest(int graphNum)
     strcpy(shortestPathChar, shortestPath.c_str());
     return shortestPathChar;
 }
-
-```

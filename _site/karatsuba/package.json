@@ -1,0 +1,14 @@
+{
+  "name": "4efb6a8fc698659d",
+  "main": "4efb6a8fc698659d@885.js",
+  "version": "885.0.0",
+  "homepage": "https://observablehq.com/d/4efb6a8fc698659d",
+  "author": {
+    "name": "scatterplotMatrix",
+    "url": "https://observablehq.com/@scatterplot-matrix"
+  },
+  "type": "module",
+  "peerDependencies": {
+    "@observablehq/runtime": "4 - 5"
+  }
+}

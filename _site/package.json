@@ -1,0 +1,9 @@
+{
+  "devDependencies": {
+    "tailwindcss": "^3.4.1"
+  },
+  "dependencies": {
+    "@observablehq/runtime": "^5.9.7",
+    "4efb6a8fc698659d": "https://api.observablehq.com/d/4efb6a8fc698659d@885.tgz?v=3"
+  }
+}
