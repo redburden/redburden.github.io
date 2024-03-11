@@ -3,12 +3,13 @@ function setup() {
   textAlign(CENTER, CENTER);
 
   input = createInput();
-  input.position(100, 60);
+  input.position(100, 70);
+  input.class("border-4");
   inputLabel = createP("Find fibonacci number at position:");
-  inputLabel.position(100, 20);
+  inputLabel.position(100, 40);
 
   button = createButton("Submit");
-  button.position(100, 80);
+  button.position(100, 100);
   button.mousePressed(() => {
     if (n < 0) {
       alert("Please enter a non-negative number");

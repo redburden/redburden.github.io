@@ -16,6 +16,6 @@ function addTopBlurb() {
   sourceLink.class(
     "text-lg text-left font-serif mr-5 text-blue-500 hover:underline"
   );
-  sourceLink.position(50, blurbPar.height + 120);
+  sourceLink.position(50, blurbPar.height + 150);
   return blurbPar.height;
 }

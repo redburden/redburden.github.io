@@ -1,4 +1,6 @@
-<nav>
-  <a class="text-blue-500 no-underline" href="/" {% if page.url == "/" %}style="underline;"{% endif %}>Home</a>
-  <a class="text-blue-500 no-underline" href="/dijkstra_wasm/index.html"{% if page.url == "/dijkstra_wasm" %}style="underline;"{% endif %}>Almost Shortest Path Problem</a>
+<link href="../output.css" rel="stylesheet" />
+<nav class="space-x-3.5 border-b-4">
+  <a class="text-lg text-left font-serif mr-5 text-blue-500 hover:underline no-underline" href="/" {% if page.url == "/" %}style="color: rgb(248 113 113);"{% endif %}>Home</a>
+  <a class="text-lg text-left font-serif mr-5 text-blue-500 hover:underline no-underline" href="/fib_matrices/" {% if page.url == "/fib_matrices/" %}style="color: rgb(248 113 113);"{% endif %}>Fibbonaci Matrices</a>
+  <a class="text-lg text-left font-serif mr-5 text-blue-500 hover:underline no-underline" href="/dijkstra_wasm/" {% if page.url == "/dijkstra_wasm/" %}style="color: rgb(248 113 113);"{% endif %}>Almost Shortest Path Problem</a>
 </nav>
